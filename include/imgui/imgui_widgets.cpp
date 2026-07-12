@@ -1194,7 +1194,13 @@ bool ImGui::Checkbox(const char* label, bool* v)
     const ImGuiID id = window->GetID(label);
     const ImVec2 label_size = CalcTextSize(label, NULL, true);
 
-    const float square_sz = GetFrameHeight();
+    // [Lion] Local change: the tick box used to fill the row's whole height, which made a checkbox read
+    // as a button standing next to its own label. It is now a smaller square, centred in a row that
+    // keeps the frame's height — so it still lines up with the fields and buttons beside it, and the
+    // item (box and label together) stays exactly as clickable. The size is not exposed through
+    // ImGuiStyle, which is why this lives here.
+    const float row_sz = GetFrameHeight();
+    const float square_sz = ImTrunc(g.FontSize * 0.8f);
     const ImVec2 pos = window->DC.CursorPos;
     const ImRect total_bb(pos, pos + ImVec2(square_sz + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), label_size.y + style.FramePadding.y * 2.0f));
     ItemSize(total_bb, style.FramePadding.y);
@@ -1228,7 +1234,9 @@ bool ImGui::Checkbox(const char* label, bool* v)
         MarkItemEdited(id);
     }
 
-    const ImRect check_bb(pos, pos + ImVec2(square_sz, square_sz));
+    // [Lion] Centred in the row rather than filling it (see above).
+    const ImVec2 check_pos = pos + ImVec2(0.0f, ImTrunc((row_sz - square_sz) * 0.5f));
+    const ImRect check_bb(check_pos, check_pos + ImVec2(square_sz, square_sz));
     const bool mixed_value = (g.LastItemData.ItemFlags & ImGuiItemFlags_MixedValue) != 0;
     if (is_visible)
     {
@@ -1248,7 +1256,9 @@ bool ImGui::Checkbox(const char* label, bool* v)
             RenderCheckMark(window->DrawList, check_bb.Min + ImVec2(pad, pad), check_col, square_sz - pad * 2.0f);
         }
     }
-    const ImVec2 label_pos = ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
+    // [Lion] Anchored to the row, not to the box: the box is centred within the row now, and the label
+    // must not ride down with it.
+    const ImVec2 label_pos = ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, pos.y + style.FramePadding.y);
     if (g.LogEnabled)
         LogRenderedText(&label_pos, mixed_value ? "[~]" : *v ? "[x]" : "[ ]");
     if (is_visible && label_size.x > 0.0f)
