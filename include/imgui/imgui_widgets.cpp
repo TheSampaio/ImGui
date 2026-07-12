@@ -6637,6 +6637,22 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     }
 
     ImVec2 text_pos(window->DC.CursorPos.x + text_offset_x, window->DC.CursorPos.y + text_offset_y);
+
+    // [Lion] Local change: a glyph does not sit in the middle of the box it is measured by. It hangs from
+    // the baseline, with the ascender's room above it and the descender's below, and both are empty for a
+    // word that has neither. Padding a row equally above and below therefore leaves its label looking low,
+    // and no amount of tuning the padding fixes it, because the offset belongs to the font, not the row.
+    //
+    // So the label is centred on the ink a reader actually sees: a capital letter's box, which the font
+    // can be asked for. The difference is a pixel or two, and it is the pixel or two that reads as wrong.
+    if (padding.y > 0.0f)
+        if (const ImFontGlyph* cap = g.Font->FindGlyphNoFallback((ImWchar)'X'))
+        {
+            const float font_scale = g.FontSize / g.Font->FontSize;
+            const float ink_center = (cap->Y0 + cap->Y1) * 0.5f * font_scale;
+            text_pos.y -= IM_TRUNC(ink_center - g.FontSize * 0.5f);
+        }
+
     ItemSize(ImVec2(text_width, frame_height), padding.y);
 
     // For regular tree nodes, we arbitrary allow to click past 2 worth of ItemSpacing
