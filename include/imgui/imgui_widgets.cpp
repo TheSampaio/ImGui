@@ -6834,7 +6834,11 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
             if (flags & ImGuiTreeNodeFlags_Bullet)
                 RenderBullet(window->DrawList, ImVec2(text_pos.x - text_offset_x * 0.60f, text_pos.y + g.FontSize * 0.5f), text_col);
             else if (!is_leaf)
-                RenderArrow(window->DrawList, ImVec2(text_pos.x - text_offset_x + padding.x, text_pos.y), text_col, is_open ? ((flags & ImGuiTreeNodeFlags_UpsideDownArrow) ? ImGuiDir_Up : ImGuiDir_Down) : ImGuiDir_Right, 1.0f);
+                // [Lion] Local change: a framed header drew its arrow at full font size while a tree node
+                // drew the same arrow at 0.70 — the same control, two sizes, depending on where it was.
+                // Framed now matches the tree, nudged down by the same amount the tree nudges it, since a
+                // smaller arrow otherwise centres itself high.
+                RenderArrow(window->DrawList, ImVec2(text_pos.x - text_offset_x + padding.x, text_pos.y + g.FontSize * 0.15f), text_col, is_open ? ((flags & ImGuiTreeNodeFlags_UpsideDownArrow) ? ImGuiDir_Up : ImGuiDir_Down) : ImGuiDir_Right, 0.70f);
             else // Leaf without bullet, left-adjusted text
                 text_pos.x -= text_offset_x - padding.x;
             if (flags & ImGuiTreeNodeFlags_ClipLabelForTrailingButton)
@@ -9060,7 +9064,9 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         RenderText(text_pos, label);
         if (icon_w > 0.0f)
             RenderText(pos + ImVec2(offsets->OffsetIcon, 0.0f), icon);
-        RenderArrow(window->DrawList, pos + ImVec2(offsets->OffsetMark + extra_w + g.FontSize * 0.30f, 0.0f), GetColorU32(ImGuiCol_Text), ImGuiDir_Right);
+        // [Lion] Local change: the submenu's arrow is the same arrow a tree node draws, so it is the same
+        // size as one — see the framed header above.
+        RenderArrow(window->DrawList, pos + ImVec2(offsets->OffsetMark + extra_w + g.FontSize * 0.30f, g.FontSize * 0.15f), GetColorU32(ImGuiCol_Text), ImGuiDir_Right, 0.70f);
     }
     if (!enabled)
         EndDisabled();
