@@ -867,9 +867,14 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
     if (hovered)
         window->DrawList->AddRectFilled(bb.Min, bb.Max, bg_col);
     RenderNavCursor(bb, id, ImGuiNavRenderCursorFlags_Compact);
-    const ImU32 cross_col = GetColorU32(ImGuiCol_Text);
+
+    // [Lion] Local change: the cross was drawn in the full text colour at the label's own weight, so
+    // every closable tab carried a mark as loud as its name. It is now dim until pointed at, and a
+    // little smaller — reachable, rather than shouting. Neither is exposed through ImGuiStyle, which
+    // is why it lives here.
+    const ImU32 cross_col = GetColorU32((hovered || held) ? ImGuiCol_Text : ImGuiCol_TextDisabled);
     const ImVec2 cross_center = bb.GetCenter() - ImVec2(0.5f, 0.5f);
-    const float cross_extent = g.FontSize * 0.5f * 0.7071f - 1.0f;
+    const float cross_extent = (g.FontSize * 0.5f * 0.7071f - 1.0f) * 0.75f;
     const float cross_thickness = 1.0f; // FIXME-DPI
     window->DrawList->AddLine(cross_center + ImVec2(+cross_extent, +cross_extent), cross_center + ImVec2(-cross_extent, -cross_extent), cross_col, cross_thickness);
     window->DrawList->AddLine(cross_center + ImVec2(+cross_extent, -cross_extent), cross_center + ImVec2(-cross_extent, +cross_extent), cross_col, cross_thickness);
