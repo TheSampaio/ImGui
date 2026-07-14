@@ -66,7 +66,11 @@
 //#define IMGUI_USE_LEGACY_CRC32_ADLER
 
 //---- Use 32-bit for ImWchar (default is 16-bit) to support Unicode planes 1-16. (e.g. point beyond 0xFFFF like emoticons, dingbats, symbols, shapes, ancient languages, etc...)
-//#define IMGUI_USE_WCHAR32
+// The Lion Engine's editor draws with Material Design Icons, whose glyphs live in the supplementary
+// private use area (U+F0000 and up). At 16 bits every one of them decodes to the replacement character,
+// so the icon set is unusable without this. It is set here, and not in a build script, because every
+// translation unit that sees imgui.h must agree on how wide an ImWchar is.
+#define IMGUI_USE_WCHAR32
 
 //---- Avoid multiple STB libraries implementations, or redefine path/filenames to prioritize another version
 // By default the embedded implementations are declared static and not available outside of Dear ImGui sources files.
